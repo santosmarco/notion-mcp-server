@@ -1,0 +1,23 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "notion",
+  "description": "Notion plugin marketplace for Claude Code",
+  "owner": {
+    "name": "Notion",
+    "url": "https://notion.so"
+  },
+  "plugins": [
+    {
+      "name": "notion",
+      "description": "Connect to Notion. Search pages and databases, create and update content, query data sources, manage tasks, and run curated workflows for capturing meeting notes, turning specs into tasks, triaging reports, and generating status updates.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Notion",
+        "url": "https://notion.so"
+      },
+      "source": "./",
+      "category": "productivity",
+      "homepage": "https://github.com/makenotion/notion-mcp-server"
+    }
+  ]
+}

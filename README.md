@@ -296,6 +296,57 @@ Don't forget to replace `ntn_****` with your integration secret. Find it from yo
 
 ![Copying your Integration token from the Configuration tab in the developer portal](https://github.com/user-attachments/assets/67b44536-5333-49fa-809c-59581bf5370a)
 
+### Install as a plugin (Cursor / Claude Code)
+
+This repository is also packaged as a plugin for Cursor and Claude Code. Installing the plugin registers the MCP server **and** a curated set of skills (workflows on top of the raw MCP tools) in one step.
+
+The plugin manifests live at:
+
+- `.cursor-plugin/plugin.json` — Cursor plugin manifest
+- `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` — Claude Code plugin + marketplace manifests
+- `.mcp.json` — bundled MCP server registration (uses `npx -y @notionhq/notion-mcp-server` so no local clone is required at runtime)
+
+#### Bundled skills
+
+| Skill | What it does |
+| --- | --- |
+| `capture-tasks-from-meeting-notes` | Parse meeting notes (Notion page or pasted text), extract action items + assignees, create rows in a tasks data source. |
+| `spec-to-implementation` | Read a Notion spec page, create a parent project page, then generate one task row per implementation unit. |
+| `triage-page` | Search the workspace for similar reports; either add a comment to the existing match or create a new page. |
+| `generate-status-update` | Query a tasks data source for recent activity and publish a formatted status update as a Notion page. |
+| `search-workspace` | Cross-search Notion pages and databases to answer natural-language questions with citations. |
+
+Each skill is a single `skills/<name>/SKILL.md` file you can read in this repo.
+
+#### Cursor
+
+1. Install the plugin from this repository (Cursor → plugins → install from git URL or local path; the discovery file is `.cursor-plugin/plugin.json`).
+2. Set `NOTION_TOKEN` in your shell environment **before launching Cursor** so the bundled `.mcp.json` can pick it up. The token is the same `ntn_****` integration token described in the `Installation` section above.
+3. Restart Cursor. The `notion` MCP server appears under MCP servers, and the bundled skills become available to the agent.
+
+#### Claude Code
+
+1. Add this repository as a marketplace source:
+
+   ```bash
+   claude code marketplace add https://github.com/makenotion/notion-mcp-server
+   ```
+
+2. Install the `notion` plugin from that marketplace:
+
+   ```bash
+   claude code plugin install notion
+   ```
+
+3. Set `NOTION_TOKEN` in your shell environment so the plugin's bundled `.mcp.json` resolves it on launch.
+
+The exact CLI command may vary by Claude Code version — if either of the commands above is rejected, run `claude code marketplace --help` and `claude code plugin --help` to find the current verbs. The plugin manifest itself is unchanged.
+
+#### Notes
+
+- The bundled `.mcp.json` uses the `stdio` transport via `npx -y @notionhq/notion-mcp-server`. To switch to the hosted Notion MCP (https://developers.notion.com/docs/mcp), edit your local copy of `.mcp.json` after install or use one of the manual snippets in the `Installation` section above.
+- All bundled skills reference Notion API operations by their MCP tool name (the OpenAPI `operationId`, e.g. `post-search`, `query-data-source`, `post-page`). If you upgrade to a future release that renames operations, the skills may need updates too — `rg <old-operationId> skills/` will surface any stragglers.
+
 ### Transport options
 
 The Notion MCP Server supports two transport modes:
