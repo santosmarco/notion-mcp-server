@@ -1,8 +1,8 @@
 {
   "name": "notion",
   "displayName": "Notion",
-  "description": "Notion plugin for Cursor with MCP and skills for searching pages, querying data sources, capturing tasks from meeting notes, breaking specs into implementation tasks, triaging reports, and generating status updates.",
-  "version": "0.1.0",
+  "description": "Notion plugin for Cursor: MCP server with rich tool UIs (page viewer, sortable data source table, kanban board, search gallery) plus curated skills for capturing meeting notes, turning specs into tasks, triaging reports, and generating status updates.",
+  "version": "0.2.0",
   "author": {
     "name": "Notion",
     "url": "https://notion.so"
@@ -10,7 +10,7 @@
   "homepage": "https://developers.notion.com/docs/mcp",
   "repository": "https://github.com/makenotion/notion-mcp-server",
   "license": "MIT",
-  "keywords": ["notion", "mcp", "pages", "databases", "data-sources", "skills"],
+  "keywords": ["notion", "mcp", "pages", "databases", "data-sources", "skills", "mcp-apps", "tool-ui"],
   "skills": "./skills/",
   "mcp": "./.mcp.json"
 }

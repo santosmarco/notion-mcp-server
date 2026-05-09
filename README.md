@@ -318,6 +318,24 @@ The plugin manifests live at:
 
 Each skill is a single `skills/<name>/SKILL.md` file you can read in this repo.
 
+#### Rich tool UIs
+
+Tool responses render as native-feeling cards and interactive views rather than raw JSON blobs. Every tool result includes:
+
+- A `text` content block with the original Notion JSON (back-compat for any host).
+- One MCP `resource_link` per Notion item (page / database / data source / block / comment / user). Hosts like Cursor render these as a card list — icon, title, parent breadcrumb, last-edited timestamp, click-through to Notion.
+- `structuredContent` summarizing the response shape and item count for code-mode consumers.
+- An MCP App `EmbeddedResource` (sandboxed iframe) when the response shape matches a curated view:
+
+| MCP App URI | Triggered by | What it shows |
+| --- | --- | --- |
+| `ui://notion/page-viewer` | `retrieve-a-page`, `get-block-children` | Cover image, icon, title, blocks (headings, paragraphs, todos, callouts, code, images, dividers, quotes, bookmarks). |
+| `ui://notion/data-source-table` | `post-data-source-query` (no status column) | Sortable, filterable table with status pills, people avatars, dates, relations, urls. |
+| `ui://notion/task-kanban` | `post-data-source-query` (status / select column present) | Kanban board, lanes grouped by the detected `status` / `select` property. |
+| `ui://notion/search-results` | `post-search` (mixed object types) | Card gallery: icon + title + parent breadcrumb + updated date. |
+
+See [`docs/tool-uis.md`](docs/tool-uis.md) for the architecture and how to add a new view.
+
 #### Cursor
 
 1. Install the plugin from this repository (Cursor → plugins → install from git URL or local path; the discovery file is `.cursor-plugin/plugin.json`).

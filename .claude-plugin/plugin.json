@@ -1,6 +1,6 @@
 {
   "name": "notion",
-  "description": "Connect to Notion. Search pages and databases, create and update content, query data sources, manage tasks, and run curated workflows for capturing meeting notes, turning specs into tasks, triaging reports, and generating status updates.",
+  "description": "Connect to Notion with rich tool UIs (page viewer, sortable data source table, kanban board, search gallery). Search pages and databases, create and update content, query data sources, manage tasks, and run curated workflows for capturing meeting notes, turning specs into tasks, triaging reports, and generating status updates.",
   "author": {
     "name": "Notion"
   },

@@ -1,10 +1,12 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
-import { CallToolRequestSchema, JSONRPCResponse, ListToolsRequestSchema, Tool } from '@modelcontextprotocol/sdk/types.js'
+import { CallToolRequestSchema, JSONRPCResponse, ListResourcesRequestSchema, ListToolsRequestSchema, ReadResourceRequestSchema, Tool } from '@modelcontextprotocol/sdk/types.js'
 import { JSONSchema7 as IJsonSchema } from 'json-schema'
 import { OpenAPIToMCPConverter } from '../openapi/parser'
 import { HttpClient, HttpClientError } from '../client/http-client'
 import { OpenAPIV3 } from 'openapi-types'
 import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js'
+import { buildToolResultContent } from '../notion/render'
+import { getUiAppForTool, listUiApps, readUiApp } from '../notion/ui'
 
 type PathItemObject = OpenAPIV3.PathItemObject & {
   get?: OpenAPIV3.OperationObject
@@ -91,7 +93,10 @@ export class MCPProxy {
   private openApiLookup: Record<string, OpenAPIV3.OperationObject & { method: string; path: string }>
 
   constructor(name: string, openApiSpec: OpenAPIV3.Document) {
-    this.server = new Server({ name, version: '1.0.0' }, { capabilities: { tools: {} } })
+    this.server = new Server(
+      { name, version: '1.0.0' },
+      { capabilities: { tools: {}, resources: {} } },
+    )
     const baseUrl = openApiSpec.servers?.[0].url
     if (!baseUrl) {
       throw new Error('No base URL found in OpenAPI spec')
@@ -129,7 +134,8 @@ export class MCPProxy {
           const httpMethod = operation?.method?.toLowerCase();
           const isReadOnly = httpMethod === 'get';
 
-          tools.push({
+          const uiResourceUri = getUiAppForTool(truncatedToolName)
+          const toolEntry: Tool = {
             name: truncatedToolName,
             description: method.description,
             inputSchema: method.inputSchema as Tool['inputSchema'],
@@ -139,7 +145,11 @@ export class MCPProxy {
                 ? { readOnlyHint: true }
                 : { destructiveHint: true }),
             },
-          })
+          }
+          if (uiResourceUri) {
+            toolEntry._meta = { ui: { resourceUri: uiResourceUri } }
+          }
+          tools.push(toolEntry)
         })
       })
 
@@ -161,18 +171,13 @@ export class MCPProxy {
       const deserializedParams = params ? deserializeParams(params as Record<string, unknown>) : {}
 
       try {
-        // Execute the operation
         const response = await this.httpClient.executeOperation(operation, deserializedParams)
-
-        // Convert response to MCP format
-        return {
-          content: [
-            {
-              type: 'text', // currently this is the only type that seems to be used by mcp server
-              text: JSON.stringify(response.data), // TODO: pass through the http status code text?
-            },
-          ],
+        const built = buildToolResultContent(name, response.data)
+        const result: { content: typeof built.content; structuredContent?: Record<string, unknown> } = {
+          content: built.content,
         }
+        if (built.structuredContent) result.structuredContent = built.structuredContent
+        return result
       } catch (error) {
         console.error('Error in tool call', error instanceof Error ? error.message : 'Unknown error')
         if (error instanceof HttpClientError) {
@@ -192,6 +197,24 @@ export class MCPProxy {
         }
         throw error
       }
+    })
+
+    this.server.setRequestHandler(ListResourcesRequestSchema, async () => ({
+      resources: listUiApps().map((app) => ({
+        uri: app.uri,
+        name: app.name,
+        description: app.description,
+        mimeType: app.mimeType,
+      })),
+    }))
+
+    this.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+      const { uri } = request.params
+      const app = readUiApp(uri)
+      if (!app) {
+        throw new Error(`Resource ${uri} not found`)
+      }
+      return { contents: [app] }
     })
   }
 

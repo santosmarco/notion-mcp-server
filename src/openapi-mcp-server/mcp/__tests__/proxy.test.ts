@@ -334,6 +334,100 @@ describe('MCPProxy', () => {
     })
   })
 
+  describe('Notion tool UI integration', () => {
+    let callToolHandler: Function
+    let listResourcesHandler: Function
+    let readResourceHandler: Function
+
+    beforeEach(() => {
+      const server = (proxy as any).server
+      const handlers = server.setRequestHandler.mock.calls
+        .flatMap((x: unknown[]) => x)
+        .filter((x: unknown) => typeof x === 'function')
+      callToolHandler = handlers[1]
+      listResourcesHandler = handlers[2]
+      readResourceHandler = handlers[3]
+    })
+
+    it('lists the four bundled UI app resources', async () => {
+      const result = await listResourcesHandler()
+      const uris = result.resources.map((r: { uri: string }) => r.uri)
+      expect(uris).toContain('ui://notion/page-viewer')
+      expect(uris).toContain('ui://notion/data-source-table')
+      expect(uris).toContain('ui://notion/search-results')
+      expect(uris).toContain('ui://notion/task-kanban')
+    })
+
+    it('serves a UI app resource HTML when read', async () => {
+      const result = await readResourceHandler({ params: { uri: 'ui://notion/page-viewer' } })
+      expect(result.contents[0].mimeType).toBe('text/html;profile=mcp-app')
+      expect(result.contents[0].text).toContain('<!doctype html>')
+    })
+
+    it('throws on an unknown resource URI', async () => {
+      await expect(
+        readResourceHandler({ params: { uri: 'ui://notion/does-not-exist' } }),
+      ).rejects.toThrow('Resource ui://notion/does-not-exist not found')
+    })
+
+    it('emits resource_link blocks and a UI app resource for a Notion page response', async () => {
+      const pageResponse = {
+        data: {
+          object: 'page',
+          id: '11111111-2222-3333-4444-555555555555',
+          url: 'https://www.notion.so/Sample-1111111122223333444455555555555',
+          icon: { type: 'emoji', emoji: '🚀' },
+          properties: { Name: { type: 'title', title: [{ plain_text: 'Sample' }] } },
+        },
+        status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+      }
+      ;(HttpClient.prototype.executeOperation as ReturnType<typeof vi.fn>).mockResolvedValue(pageResponse)
+      ;(proxy as any).openApiLookup = {
+        'API-retrieve-a-page': {
+          operationId: 'retrieve-a-page',
+          responses: { '200': { description: 'Success' } },
+          method: 'get',
+          path: '/pages/{page_id}',
+        },
+      }
+
+      const result = await callToolHandler({
+        params: { name: 'API-retrieve-a-page', arguments: { page_id: 'x' } },
+      })
+
+      expect(result.content[0].type).toBe('text')
+      const link = result.content.find((c: { type: string }) => c.type === 'resource_link')
+      expect(link).toBeDefined()
+      expect(link.title).toBe('Sample')
+      const ui = result.content.find((c: { type: string }) => c.type === 'resource')
+      expect(ui).toBeDefined()
+      expect(ui.resource.uri).toBe('ui://notion/page-viewer')
+      expect(result.structuredContent.notion.shape).toBe('page')
+    })
+
+    it('falls back to a single text block for non-Notion-shaped responses', async () => {
+      ;(HttpClient.prototype.executeOperation as ReturnType<typeof vi.fn>).mockResolvedValue({
+        data: { ok: true },
+        status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+      })
+      ;(proxy as any).openApiLookup = {
+        'API-something': {
+          operationId: 'something',
+          responses: { '200': { description: 'Success' } },
+          method: 'get',
+          path: '/something',
+        },
+      }
+
+      const result = await callToolHandler({ params: { name: 'API-something', arguments: {} } })
+      expect(result.content.length).toBe(1)
+      expect(result.content[0].type).toBe('text')
+      expect(result.structuredContent).toBeUndefined()
+    })
+  })
+
   describe('string-encoded object params deserialized in handler (issue #208)', () => {
     let callToolHandler: Function
 
