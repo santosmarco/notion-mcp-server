@@ -330,8 +330,8 @@ Tool responses render as native-feeling cards and interactive views rather than 
 | MCP App URI | Triggered by | What it shows |
 | --- | --- | --- |
 | `ui://notion/page-viewer` | `retrieve-a-page`, `get-block-children` | Cover image, icon, title, blocks (headings, paragraphs, todos, callouts, code, images, dividers, quotes, bookmarks). |
-| `ui://notion/data-source-table` | `post-data-source-query` (no status column) | Sortable, filterable table with status pills, people avatars, dates, relations, urls. |
-| `ui://notion/task-kanban` | `post-data-source-query` (status / select column present) | Kanban board, lanes grouped by the detected `status` / `select` property. |
+| `ui://notion/data-source-table` | `query-data-source` (no status column) | Sortable, filterable table with status pills, people avatars, dates, relations, urls. |
+| `ui://notion/task-kanban` | `query-data-source` (status / select column present) | Kanban board, lanes grouped by the detected `status` / `select` property. |
 | `ui://notion/search-results` | `post-search` (mixed object types) | Card gallery: icon + title + parent breadcrumb + updated date. |
 
 See [`docs/tool-uis.md`](docs/tool-uis.md) for the architecture and how to add a new view.

@@ -51,8 +51,7 @@ const TOOL_TO_APP: Record<string, string> = {
   'API-retrieve-a-page': PAGE_APP_URI,
   'API-get-block-children': PAGE_APP_URI,
   'API-post-search': SEARCH_APP_URI,
-  'API-post-data-source-query': TABLE_APP_URI,
-  'API-post-database-query': TABLE_APP_URI,
+  'API-query-data-source': TABLE_APP_URI,
 }
 
 export const listUiApps = (): UiAppDescriptor[] => UI_APPS
@@ -100,8 +99,11 @@ export const renderUiAppForShape = (
     if (toolName === 'API-post-search') {
       return renderSearchApp({ kind: 'results', items: shape.items, data })
     }
-    if (detectKanban(shape.items)) {
-      return renderKanbanApp({ kind: 'rows', items: shape.items, data })
+    if (toolName === 'API-query-data-source' || toolName === 'API-post-database-query') {
+      if (detectKanban(shape.items)) {
+        return renderKanbanApp({ kind: 'rows', items: shape.items, data })
+      }
+      return renderTableApp({ kind: 'rows', items: shape.items, data })
     }
     return renderTableApp({ kind: 'rows', items: shape.items, data })
   }

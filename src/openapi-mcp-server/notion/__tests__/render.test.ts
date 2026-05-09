@@ -64,7 +64,7 @@ describe('buildToolResultContent', () => {
       has_more: false,
       next_cursor: null,
     }
-    const built = buildToolResultContent('API-post-data-source-query', list)
+    const built = buildToolResultContent('API-query-data-source', list)
     const links = built.content.filter((c) => c.type === 'resource_link')
     expect(links.length).toBe(2)
   })
@@ -78,7 +78,7 @@ describe('buildToolResultContent', () => {
         samplePageRow('b1111111-2222-3333-4444-555555555555', 'Task B', 'Done'),
       ],
     }
-    const built = buildToolResultContent('API-post-data-source-query', list)
+    const built = buildToolResultContent('API-query-data-source', list)
     const ui = built.content.find((c) => c.type === 'resource')
     if (!ui || ui.type !== 'resource') throw new Error('expected resource')
     expect(ui.resource.uri).toBe('ui://notion/task-kanban')

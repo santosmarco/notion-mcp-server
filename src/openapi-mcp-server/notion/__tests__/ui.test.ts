@@ -21,7 +21,7 @@ describe('UI app registry', () => {
   it('maps known tool names to their UI resource URI', () => {
     expect(getUiAppForTool('API-retrieve-a-page')).toBe(PAGE_APP_URI)
     expect(getUiAppForTool('API-post-search')).toBe(SEARCH_APP_URI)
-    expect(getUiAppForTool('API-post-data-source-query')).toBe(TABLE_APP_URI)
+    expect(getUiAppForTool('API-query-data-source')).toBe(TABLE_APP_URI)
     expect(getUiAppForTool('something-unknown')).toBeUndefined()
   })
 
@@ -87,7 +87,7 @@ describe('renderUiAppForShape', () => {
       ],
     }
     const shape = detectShape(rowList)
-    const ui = renderUiAppForShape('API-post-data-source-query', shape, rowList)
+    const ui = renderUiAppForShape('API-query-data-source', shape, rowList)
     expect(ui?.uri).toBe(KANBAN_APP_URI)
   })
 
@@ -106,7 +106,7 @@ describe('renderUiAppForShape', () => {
       ],
     }
     const shape = detectShape(rowList)
-    const ui = renderUiAppForShape('API-post-data-source-query', shape, rowList)
+    const ui = renderUiAppForShape('API-query-data-source', shape, rowList)
     expect(ui?.uri).toBe(TABLE_APP_URI)
   })
 
